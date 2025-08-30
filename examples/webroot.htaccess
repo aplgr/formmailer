@@ -1,0 +1,3 @@
+# Map /contact to the CGI script under cgi-bin/
+RewriteEngine On
+RewriteRule ^contact$ cgi-bin/contact.py [L]

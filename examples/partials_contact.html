@@ -1,0 +1,37 @@
+<!-- Example contact partial: Alpine.js + htmx -->
+<!-- Include Alpine + htmx + json-enc extension in your layout/head -->
+<!-- <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+     <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/json-enc.js" defer></script>
+     <script src="https://unpkg.com/alpinejs@3.x.x" defer></script> -->
+
+<form x-data="formGuard()" x-init="init()"
+      hx-post="https://api.example.com/contact"
+      hx-ext="json-enc" hx-encoding="json"
+      hx-swap="none"
+      hx-disabled-elt="button[type=submit], input[type=submit]"
+      @htmx:configRequest.window="configRequest($event)"
+      @htmx:beforeRequest.window="beforeRequest($event)"
+      @htmx:afterRequest.window="afterRequest($event)"
+      action="/fallback-contact.php" method="post" class="php-email-form">
+
+  <input type="text" name="name" class="form-control" placeholder="Your name" required>
+  <input type="email" name="email" class="form-control" placeholder="Your email" required>
+
+  <!-- Honeypot: visible to bots, off-screen for humans -->
+  <div style="position:absolute; left:-5000px" aria-hidden="true">
+    <label>Website <input type="text" name="website" autocomplete="off" tabindex="-1"></label>
+  </div>
+
+  <input type="text" name="subject" class="form-control" placeholder="Subject" required>
+  <textarea name="message" class="form-control" rows="6" placeholder="Your message" required></textarea>
+
+  <button type="submit" class="btn btn-submit w-100">Send message</button>
+</form>
+
+<p class="form-status" x-data x-text="$store.fg.status" role="status" aria-live="polite"></p>
+
+<!-- Email link (visible but assembled client-side) -->
+<a x-data="{u:'hello', d:'example.com', s:'Website contact'}"
+   x-text="`${u}@${d}`"
+   :href="`mailto:${u}@${d}?subject=${encodeURIComponent(s)}`"
+   rel="nofollow">Show email</a>

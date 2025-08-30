@@ -1,0 +1,8 @@
+# Enable CGI for .py / .cgi in this directory
+Options +ExecCGI
+AddHandler cgi-script .cgi .py
+
+# Deny access to secrets
+<Files "contact.env">
+  Require all denied
+</Files>

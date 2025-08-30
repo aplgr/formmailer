@@ -1,0 +1,12 @@
+# env / secrets
+contact.env
+*.env
+cgi-bin/contact.env
+
+# python
+__pycache__/
+*.pyc
+
+# editors
+.vscode/
+.idea/
