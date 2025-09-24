@@ -1,0 +1,60 @@
+/* Container */
+#ap-toaster {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  display: grid;
+  gap: 10px;
+  z-index: 2147483647;
+  /* above overlays */
+}
+
+/* Base toast */
+.ap-toast {
+  display: none;
+  min-width: 260px;
+  max-width: 420px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+  font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+  background: #111827;
+  color: #f8fafc;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: transform .25s ease, opacity .25s ease;
+}
+
+.ap-toast.ap-shown {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-color-scheme: light) {
+  .ap-toast {
+    background: #111827;
+    color: #f8fafc;
+  }
+}
+
+.ap-toast--success {
+  background: #067c0c !important;
+  color: #fff !important;
+  font-weight: bold;
+  text-align: center;
+}
+
+.ap-toast--error {
+  background: #ee1313 !important;
+  color: #fff !important;
+  font-weight: bold;
+  text-align: center;
+}
+
+.ap-toast--info {
+  background: #fcf5f5 !important;
+  color: #4b4848;
+  font-weight: bold;
+  text-align: center;
+}

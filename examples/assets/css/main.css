@@ -1,0 +1,31 @@
+body {
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+}
+
+.ap-title small {
+    letter-spacing: .08em;
+    color: #6c757d;
+}
+
+.ap-card {
+    border: 1px solid rgba(0, 0, 0, .06);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, .06);
+}
+
+.required:after {
+    content: "*";
+    color: #0d6efd;
+    margin-left: .25rem;
+}
+
+.hp {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+#contact {
+    scroll-margin-top: 6rem;
+}

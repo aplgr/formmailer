@@ -1,76 +1,77 @@
-// Alpine store + guards for spam reduction (client-side)
 document.addEventListener('alpine:init', () => {
   Alpine.store('fg', { status: '' });
 
   Alpine.data('formGuard', () => ({
-      minFillMs: 5000,
-      cooldownMs: 60000,
-      dupKey: 'contact:lastHash',
-      cooldownKey: 'contact:lastTs',
-      challenge: randomHex(16),
-      start: Date.now(),
+    start: 0,
+    lastElapsed: 0,
 
-      init() {},
+    init() {
+      this.start = Date.now();
+      this.setState('idle');
 
-      configRequest(e) {
-        if (e.target !== this.$el) return;
-        e.detail.parameters._js_challenge = this.challenge;
-        e.detail.parameters._elapsed_ms   = String(Date.now() - this.start);
-      },
+      // Ensure _elapsed_ms is set before htmx/json-enc serializes
+      this.$el.addEventListener('submit', () => {
+        const elapsed = Math.max(1, Date.now() - this.start);
+        this.lastElapsed = elapsed;
+        const hidden = this.$el.querySelector('input[name=\"_elapsed_ms\"]');
+        if (hidden) hidden.value = String(elapsed);
+      }, { capture: true });
 
-      beforeRequest(e) {
-        if (e.target !== this.$el) return;
-        const fd = new FormData(this.$el);
-        const hp = (fd.get('website') || '').trim();
-        if (hp) {
-          e.preventDefault();
-          Alpine.store('fg').status = 'Thanks! Your message has been sent.';
-          this.$el.reset(); this.resetGuards(); return;
-        }
-        if (Date.now() - this.start < this.minFillMs) {
-          e.preventDefault(); Alpine.store('fg').status = 'Please take a moment to complete the form.'; return;
-        }
-        const name = (fd.get('name') || '').trim();
-        const email= (fd.get('email')|| '').trim();
-        const msg  = (fd.get('message')|| '').trim();
-        if (!name || !msg || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          e.preventDefault(); Alpine.store('fg').status = 'Please check the required fields.'; return;
-        }
-        const lastTs = parseInt(localStorage.getItem(this.cooldownKey) || '0', 10);
-        if (lastTs && Date.now() - lastTs < this.cooldownMs) {
-          e.preventDefault(); Alpine.store('fg').status = 'Please wait a moment before sending again.'; return;
-        }
-        const fp = hashStr(`${name}|${email}|${msg}`);
-        const lastHash = sessionStorage.getItem(this.dupKey);
-        if (lastHash && lastHash === fp) {
-          e.preventDefault(); Alpine.store('fg').status = 'Looks like you already sent this.'; return;
-        }
-        sessionStorage.setItem(this.dupKey, fp);
-        Alpine.store('fg').status = 'Sending…';
-      },
+      // Fallback: copy hx-post into action if empty
+      if (this.$el.getAttribute('action') === '') {
+        const hx = this.$el.getAttribute('hx-post') || this.$el.dataset.action;
+        if (hx) this.$el.setAttribute('action', hx);
+      }
 
-      afterRequest(e) {
-        if (e.target !== this.$el) return;
-        if (e.detail.successful) {
-          localStorage.setItem(this.cooldownKey, String(Date.now()));
-          Alpine.store('fg').status = 'Thanks! Your message has been sent.';
-          this.$el.reset(); this.resetGuards();
-        } else {
-          Alpine.store('fg').status = 'Sending failed. Please try again later.';
-        }
-      },
+      // Listen for centralized notifications to update SR text / inline boxes
+      this.$el.addEventListener('ap:notify', (ev) => {
+        const d = ev.detail || {};
+        const msg = d.message || '';
+        Alpine.store('fg').status = msg;
+      });
+    },
 
-      resetGuards() { this.start = Date.now(); this.challenge = randomHex(16); }
+    // htmx hooks
+    configRequest(e) {
+      if (e.target !== this.$el) return;
+      const elapsed = this.lastElapsed || Math.max(1, Date.now() - this.start);
+      const p = e.detail.parameters || (e.detail.parameters = {});
+      p._elapsed_ms = elapsed;
+      this.setState('loading');
+    },
+
+    beforeRequest(e) {
+      if (e.target !== this.$el) return;
+      const elapsed = this.lastElapsed || Math.max(1, Date.now() - this.start);
+      const hidden = this.$el.querySelector('input[name=\"_elapsed_ms\"]');
+      if (hidden) hidden.value = String(elapsed);
+      const p = e.detail.parameters || (e.detail.parameters = {});
+      p._elapsed_ms = elapsed;
+    },
+
+    afterRequest(e) {
+      if (e.target !== this.$el) return;
+      const xhr = e.detail.xhr;
+      let data = null;
+      try { data = JSON.parse(xhr.responseText || ''); } catch { }
+      if (xhr.status >= 200 && xhr.status < 300 && data && data.ok) {
+        this.setState('sent');
+        this.$el.reset();
+        this.start = Date.now();
+        this.lastElapsed = 0;
+      } else {
+        this.setState('error');
+      }
+    },
+
+    sendError(e) {
+      if (e.target !== this.$el) return;
+      this.setState('error');
+    },
+
+    // visual state for CSS fallbacks
+    setState(state) {
+      this.$el.setAttribute('data-status', state || 'idle');
+    },
   }));
 });
-
-function randomHex(len){
-  const a = new Uint8Array(len);
-  (crypto||window.crypto).getRandomValues(a);
-  return Array.from(a, b => b.toString(16).padStart(2,'0')).join('');
-}
-function hashStr(s){
-  let h = 5381;
-  for (let i=0; i<s.length; i++) h = ((h<<5)+h) ^ s.charCodeAt(i);
-  return (h>>>0).toString(36);
-}
