@@ -1,5 +1,10 @@
 # formmailer
 
+![Status](https://img.shields.io/badge/status-alpha-orange)
+![Scope](https://img.shields.io/badge/scope-personal%20tool-blue)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/aplgr/grovegrid/issues)
+
 A tiny **CGI form mailer**: receive form submissions over HTTP and deliver via SMTP.
 Modern but dependency‑free: JSON `POST`, CORS allow‑list, honeypot, minimum fill time, and per‑IP rate limiting.
 Designed to work on simple shared hosting with CGI enabled.
@@ -53,8 +58,8 @@ MAX_BODY=65536           # request body size limit in bytes
 ```
 
 ## Frontend example (Alpine.js + htmx)
-See `examples/partials_contact.html` and `examples/assets/js/contact.js` for a minimal integration.
-The form is progressive‑enhancement friendly: if JS is disabled, your fallback action still applies.
+See `exaples/contact-form.html` and `examples/assets/js/contact.js` for a minimal integration.
+Use your URL as the destination address for the form: `hx-post="https://api.example.com/contact"`
 
 ## Security notes
 - The script strictly requires `application/json` and rejects oversized bodies.
